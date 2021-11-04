@@ -1,0 +1,71 @@
+name: LISTA2 --- EX3
+description: ''
+host: EXCEL
+api_set: {}
+script:
+  content: |
+    run.addEventListener("click", () => {
+      Excel.run(function(context) {
+        let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+        currentWorksheet.getRange().clear();
+
+        let expensesTable = currentWorksheet.tables.add("A1:C1", true /*hasHeaders*/);
+        expensesTable.name = "ExpensesTable";
+        expensesTable.getHeaderRowRange().values = [["Name", "Climate", "Population"]];
+
+        let planet_list = [];
+        fetch("https://swapi.dev/api/planets/")
+          .then(function(response) {
+            response.json().then(function(data) {
+              for (let planet of data.results) {
+                planet_list.push([planet.name, planet.climate, planet.population]);
+              }
+              expensesTable.rows.add(null, planet_list);
+              expensesTable.getRange().format.autofitColumns();
+              expensesTable.getRange().format.autofitRows();
+
+              return context.sync();
+            });
+          })
+          .catch(function(err) {
+            console.error("Failed retrieving information", err);
+          });
+      }).catch(function(error) {
+        console.log("Error: " + error);
+        if (error instanceof OfficeExtension.Error) {
+          console.log("Debug info: " + JSON.stringify(error.debugInfo));
+        }
+      });
+    });
+  language: typescript
+template:
+  content: |-
+    <button id="run" class="my-Button">
+        <span class="my-Button-label">Run</span>
+    </button>
+  language: html
+style:
+  content: |-
+    section.samples {
+        margin-top: 20px;
+    }
+
+    section.samples .ms-Button, section.setup .ms-Button {
+        display: block;
+        margin-bottom: 5px;
+        margin-left: 20px;
+        min-width: 80px;
+    }
+  language: css
+libraries: |
+  https://appsforoffice.microsoft.com/lib/1/hosted/office.js
+  @types/office-js
+
+  office-ui-fabric-js@1.4.0/dist/css/fabric.min.css
+  office-ui-fabric-js@1.4.0/dist/css/fabric.components.min.css
+
+  core-js@2.4.1/client/core.min.js
+  @types/core-js
+
+  jquery@3.1.1
+  @types/jquery@3.3.1
